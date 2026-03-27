@@ -910,6 +910,8 @@
     // 可选头像列表
     const avatarList = ['😀', '😎', '🤓', '🥳', '😇', '🤗', '😸', '🐱', '🐶', '🦊', '🐼', '🐨', '🦁', '🐯', '🦄', '🌟', '🔥', '💪', '🎉', '🎈'];
 
+    console.log('db available:', typeof window.db);
+
     let currentUser = localStorage.getItem('bbq_user_name') || '';
     let currentAvatar = localStorage.getItem('bbq_user_avatar') || '';
     let participants = [];
@@ -920,6 +922,13 @@
 
     // 初始化
     window.onload = function() {
+      console.log('Page loaded, db:', window.db);
+
+      if (!window.db) {
+        console.error('Firebase not loaded!');
+        return;
+      }
+
       // 渲染登录页头像选择
       renderLoginAvatarOptions();
 
@@ -930,7 +939,11 @@
     // 渲染登录页头像选项
     function renderLoginAvatarOptions() {
       const container = document.getElementById('loginAvatarOptions');
-      if (!container) return;
+      if (!container) {
+        console.log('loginAvatarOptions not found');
+        return;
+      }
+      console.log('Rendering avatars');
       container.innerHTML = avatarList.map(avatar => `
         <div class="avatar-option ${currentAvatar === avatar ? 'selected' : ''}"
           onclick="selectLoginAvatar('${avatar}')">${avatar}</div>
