@@ -886,7 +886,26 @@
 
   <div class="notification" id="notification"></div>
 
-  <script src="firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPsgUf2ap5-UlMedG3dkywXajNUJO1hFY",
+      authDomain: "bbq-tasks.firebaseapp.com",
+      databaseURL: "https://bbq-tasks-default-rtdb.firebaseio.com",
+      projectId: "bbq-tasks",
+      storageBucket: "bbq-tasks.firebasestorage.app",
+      messagingSenderId: "633376305167",
+      appId: "1:633376305167:web:c421a1d7de22c352b5f37a",
+      measurementId: "G-5D3X37DM1N"
+    };
+
+    // 初始化Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    window.db = database;
+  </script>
   <script>
     // 可选头像列表
     const avatarList = ['😀', '😎', '🤓', '🥳', '😇', '🤗', '😸', '🐱', '🐶', '🦊', '🐼', '🐨', '🦁', '🐯', '🦄', '🌟', '🔥', '💪', '🎉', '🎈'];
