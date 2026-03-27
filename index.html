@@ -132,6 +132,49 @@
       border-color: #ff6b35;
     }
 
+    .assignee-checkboxes {
+      padding: 10px 0;
+    }
+
+    .assignee-checkboxes label {
+      display: block;
+      margin-bottom: 8px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .assignee-checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .assignee-checkbox-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      background: #f5f5f5;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      transition: all 0.3s;
+    }
+
+    .assignee-checkbox-group label:hover {
+      background: #ffe0d0;
+    }
+
+    .assignee-checkbox-group input {
+      accent-color: #ff6b35;
+    }
+
+    .assignee-checkbox-group label.checked {
+      background: #ff6b35;
+      color: white;
+    }
+
     .task-form button {
       padding: 12px;
       background: #4caf50;
@@ -299,9 +342,10 @@
       <h3>➕ 添加任务</h3>
       <div class="task-form">
         <input type="text" id="taskTitleInput" placeholder="任务名称（必填）">
-        <select id="taskAssigneeSelect">
-          <option value="">选择负责人（可选）</option>
-        </select>
+        <div class="assignee-checkboxes">
+          <label>负责人（可多选）：</label>
+          <div id="assigneeCheckboxGroup"></div>
+        </div>
         <button onclick="addTask()">添加任务</button>
       </div>
     </div>
@@ -378,15 +422,15 @@
         participantsEl.textContent = '暂无';
       }
 
-      // 更新负责人下拉选项
-      const assigneeSelect = document.getElementById('taskAssigneeSelect');
-      assigneeSelect.innerHTML = '<option value="">选择负责人（可选）</option>';
-      participants.forEach(p => {
-        const option = document.createElement('option');
-        option.value = p;
-        option.textContent = p;
-        assigneeSelect.appendChild(option);
-      });
+      // 更新负责人多选框
+      const checkboxGroup = document.getElementById('assigneeCheckboxGroup');
+      if (participants.length > 0) {
+        checkboxGroup.innerHTML = '<div class="assignee-checkbox-group">' +
+          participants.map(p => `<label><input type="checkbox" value="${escapeHtml(p)}"> ${escapeHtml(p)}</label>`).join('') +
+          '</div>';
+      } else {
+        checkboxGroup.innerHTML = '<span style="color:#999;font-size:13px;">暂无人员，请先加入活动</span>';
+      }
 
       // 渲染待办任务
       const pendingTasks = tasks.filter(t => !t.completed);
@@ -413,7 +457,9 @@
 
     // 渲染任务项
     function renderTask(task) {
-      const assigneeHtml = task.assignee ? `<span class="assignee">👤 ${task.assignee}</span>` : '';
+      const assigneesHtml = task.assignees && task.assignees.length > 0
+        ? task.assignees.map(a => `<span class="assignee">👤 ${escapeHtml(a)}</span>`).join(' ')
+        : '';
       const creatorHtml = task.creator ? `<span class="creator">（${task.creator}创建）</span>` : '';
 
       return `
@@ -423,7 +469,7 @@
             onchange="toggleTask('${task.id}')">
           <div class="task-content">
             <div class="task-title">${escapeHtml(task.title)}</div>
-            <div class="task-meta">${assigneeHtml} ${creatorHtml}</div>
+            <div class="task-meta">${assigneesHtml} ${creatorHtml}</div>
           </div>
           <button class="delete-btn" onclick="deleteTask('${task.id}')">删除</button>
         </div>
@@ -468,7 +514,10 @@
     // 添加任务
     function addTask() {
       const title = document.getElementById('taskTitleInput').value.trim();
-      const assignee = document.getElementById('taskAssigneeSelect').value;
+
+      // 获取选中的负责人
+      const checkboxes = document.querySelectorAll('#assigneeCheckboxGroup input[type="checkbox"]:checked');
+      const assignees = Array.from(checkboxes).map(cb => cb.value);
 
       if (!title) {
         showNotification('请输入任务名称', true);
@@ -483,7 +532,7 @@
       const task = {
         id: Date.now().toString(),
         title: title,
-        assignee: assignee,
+        assignees: assignees,
         creator: currentUser,
         completed: false,
         createdAt: Date.now()
@@ -494,7 +543,7 @@
 
       // 清空输入
       document.getElementById('taskTitleInput').value = '';
-      document.getElementById('taskAssigneeSelect').value = '';
+      document.querySelectorAll('#assigneeCheckboxGroup input[type="checkbox"]').forEach(cb => cb.checked = false);
 
       showNotification('任务添加成功！');
     }
