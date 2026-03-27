@@ -289,11 +289,27 @@
     }
 
     .footer {
-      text-align: center;
-      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
       color: #888;
       font-size: 13px;
       background: #f9f9f9;
+    }
+
+    .settings-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .settings-btn:hover {
+      background: #eee;
     }
 
     .notification {
@@ -532,6 +548,21 @@
       color: white;
     }
 
+    .user-manage-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .user-manage-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: #f5f5f5;
+      border-radius: 8px;
+    }
+
     .notification.error {
       background: #ff4444;
     }
@@ -595,7 +626,17 @@
     </div>
 
     <div class="footer">
-      数据实时同步到云端 📱
+      <span>数据实时同步到云端 📱</span>
+      <button class="settings-btn" onclick="openSettingsModal()">⚙️ 设置</button>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeSettingsModal()">&times;</button>
+      <h3>⚙️ 设置</h3>
+      <div id="settingsContent"></div>
     </div>
   </div>
 
@@ -869,7 +910,55 @@
       document.getElementById('groupModal').classList.remove('show');
     }
 
-    // 渲染分组列表
+    // ===== 设置功能 =====
+
+    // 打开设置模态框
+    function openSettingsModal() {
+      document.getElementById('settingsModal').classList.add('show');
+      renderSettings();
+    }
+
+    // 关闭设置模态框
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('show');
+    }
+
+    // 渲染设置内容
+    function renderSettings() {
+      const content = document.getElementById('settingsContent');
+
+      if (!currentUser) {
+        content.innerHTML = '<p style="color:#999;">请先加入活动</p>';
+        return;
+      }
+
+      content.innerHTML = `
+        <h4 style="margin-bottom:15px;">👥 用户管理</h4>
+        <div class="user-manage-list">
+          ${participants.map(p => `
+            <div class="user-manage-item">
+              <span>${escapeHtml(p)} ${p === adminUser ? '<span style="color:#ff6b35;font-size:12px;">(管理员)</span>' : ''}</span>
+              <button onclick="deleteParticipant('${escapeHtml(p)}')" style="background:#ff4444;color:white;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;">删除</button>
+            </div>
+          `).join('')}
+        </div>
+        <hr style="margin:20px 0;border:none;border-top:1px solid #eee;">
+        <h4 style="margin-bottom:15px;">🔔 公告管理</h4>
+        <button onclick="clearAllNotifications()" style="background:#ff4444;color:white;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;">清空所有公告</button>
+      `;
+    }
+
+    // 清空所有公告
+    function clearAllNotifications() {
+      if (!confirm('确定要清空所有公告吗？')) return;
+      db.ref('bbq_activity/notifications').set([]);
+      showNotification('已清空所有公告');
+      renderSettings();
+    }
+
+    // ===== 删除用户功能 =====
+
+    // 删除参与者
     function renderGroupList() {
       const groupList = document.getElementById('groupList');
       const groupNames = Object.keys(groups);
