@@ -101,6 +101,52 @@
       margin-left: 8px;
     }
 
+    .avatar-select {
+      margin-bottom: 15px;
+    }
+
+    .avatar-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .avatar-option {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      font-size: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      transition: all 0.3s;
+    }
+
+    .avatar-option:hover {
+      transform: scale(1.1);
+    }
+
+    .avatar-option.selected {
+      border-color: #ff6b35;
+      background: #fff5f0;
+    }
+
+    .avatar-small {
+      display: inline-block;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 18px;
+      vertical-align: middle;
+      margin-right: 8px;
+      background: #f5f5f5;
+      text-align: center;
+      line-height: 28px;
+    }
+
     .add-task-section {
       padding: 20px 30px;
       border-bottom: 1px solid #eee;
@@ -588,12 +634,17 @@
     </div>
 
     <div class="user-section">
+      <div class="avatar-select" id="avatarSelectSection">
+        <p style="margin-bottom:10px;color:#666;">选择你的头像：</p>
+        <div class="avatar-options" id="avatarOptions"></div>
+      </div>
       <div class="user-input-group">
         <input type="text" id="userNameInput" placeholder="请输入你的名字">
         <button onclick="joinActivity()">加入</button>
       </div>
       <div class="current-user" id="currentUserDisplay" style="display: none;">
-        当前用户: <span id="currentUserName"></span>
+        <span id="currentUserAvatar" class="avatar-small"></span>
+        <span id="currentUserName"></span>
       </div>
     </div>
 
@@ -662,7 +713,11 @@
 
   <script src="firebase-config.js"></script>
   <script>
+    // 可选头像列表
+    const avatarList = ['😀', '😎', '🤓', '🥳', '😇', '🤗', '😸', '🐱', '🐶', '🦊', '🐼', '🐨', '🦁', '🐯', '🦄', '🌟', '🔥', '💪', '🎉', '🎈'];
+
     let currentUser = localStorage.getItem('bbq_user_name') || '';
+    let currentAvatar = localStorage.getItem('bbq_user_avatar') || '';
     let participants = [];
     let groups = {};
     let tasks = [];
@@ -671,6 +726,9 @@
 
     // 初始化
     window.onload = function() {
+      // 渲染头像选择
+      renderAvatarOptions();
+
       // 检查用户是否已登录
       if (currentUser) {
         document.getElementById('userNameInput').value = currentUser;
@@ -680,6 +738,22 @@
       // 监听Firebase数据变化
       initFirebaseListeners();
     };
+
+    // 渲染头像选项
+    function renderAvatarOptions() {
+      const container = document.getElementById('avatarOptions');
+      container.innerHTML = avatarList.map(avatar => `
+        <div class="avatar-option ${currentAvatar === avatar ? 'selected' : ''}"
+          onclick="selectAvatar('${avatar}')">${avatar}</div>
+      `).join('');
+    }
+
+    // 选择头像
+    function selectAvatar(avatar) {
+      currentAvatar = avatar;
+      localStorage.setItem('bbq_user_avatar', avatar);
+      renderAvatarOptions();
+    }
 
     // 初始化Firebase监听
     function initFirebaseListeners() {
@@ -712,13 +786,20 @@
       // 更新参与人员列表（带删除按钮）
       const participantsEl = document.getElementById('participantsList');
       const isAdmin = currentUser === adminUser;
+
+      // 处理两种数据格式：字符串数组或对象数组
+      const participantNames = participants.map(p => typeof p === 'string' ? p : p.name);
+      const participantAvatars = participants.map(p => typeof p === 'string' ? '' : (p.avatar || ''));
+
       if (participants.length > 0) {
-        participantsEl.innerHTML = participants.map(p =>
-          `<span class="participant-with-delete ${currentUser === adminUser ? 'is-admin' : ''}">
-            ${escapeHtml(p)}
-            ${currentUser === adminUser ? `<button class="delete-participant-btn" onclick="deleteParticipant('${escapeHtml(p)}')" title="删除用户">&times;</button>` : ''}
-          </span>`
-        ).join(' | ');
+        participantsEl.innerHTML = participants.map((p, i) => {
+          const name = typeof p === 'string' ? p : p.name;
+          const avatar = typeof p === 'string' ? '' : (p.avatar || '');
+          return `<span class="participant-with-delete ${currentUser === adminUser ? 'is-admin' : ''}">
+            <span class="avatar-small">${avatar || '😀'}</span>${escapeHtml(name)}
+            ${currentUser === adminUser ? `<button class="delete-participant-btn" onclick="deleteParticipant('${escapeHtml(name)}')" title="删除用户">&times;</button>` : ''}
+          </span>`;
+        }).join(' | ');
       } else {
         participantsEl.textContent = '暂无';
       }
@@ -733,7 +814,11 @@
       const checkboxGroup = document.getElementById('assigneeCheckboxGroup');
       if (participants.length > 0) {
         checkboxGroup.innerHTML = '<div class="assignee-checkbox-group">' +
-          participants.map(p => `<label><input type="checkbox" value="${escapeHtml(p)}"> ${escapeHtml(p)}</label>`).join('') +
+          participants.map(p => {
+            const name = typeof p === 'string' ? p : p.name;
+            const avatar = typeof p === 'string' ? '' : (p.avatar || '');
+            return `<label><input type="checkbox" value="${escapeHtml(name)}"> <span class="avatar-small" style="width:20px;height:20px;font-size:14px;line-height:20px;">${avatar || '😀'}</span>${escapeHtml(name)}</label>`;
+          }).join('') +
           '</div>';
       } else {
         checkboxGroup.innerHTML = '<span style="color:#999;font-size:13px;">暂无人员，请先加入活动</span>';
@@ -764,8 +849,16 @@
 
     // 渲染任务项
     function renderTask(task) {
+      // 获取头像映射
+      const avatarMap = {};
+      participants.forEach(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        const avatar = typeof p === 'string' ? '' : (p.avatar || '');
+        avatarMap[name] = avatar || '😀';
+      });
+
       const assigneesHtml = task.assignees && task.assignees.length > 0
-        ? task.assignees.map(a => `<span class="assignee">👤 ${escapeHtml(a)}</span>`).join(' ')
+        ? task.assignees.map(a => `<span class="assignee"><span class="avatar-small" style="width:18px;height:18px;font-size:12px;line-height:18px;">${avatarMap[a] || '😀'}</span>${escapeHtml(a)}</span>`).join(' ')
         : '';
       const creatorHtml = task.creator ? `<span class="creator">（${task.creator}创建）</span>` : '';
 
@@ -798,13 +891,20 @@
         return;
       }
 
+      if (!currentAvatar) {
+        showNotification('请先选择一个头像', true);
+        return;
+      }
+
       currentUser = name;
       localStorage.setItem('bbq_user_name', name);
+      localStorage.setItem('bbq_user_avatar', currentAvatar);
 
-      // 更新Firebase中的参与人员
+      // 更新Firebase中的参与人员（存储头像信息）
       if (!participants.includes(name)) {
         const activityRef = db.ref('bbq_activity');
-        const newParticipants = [...participants, name];
+        // 参与者现在存储对象 { name: 'xxx', avatar: '😀' }
+        const newParticipants = [...participants, { name: name, avatar: currentAvatar }];
 
         // 第一个加入的人成为管理员
         const updates = {
@@ -823,7 +923,8 @@
 
     // 显示当前用户
     function showCurrentUser() {
-      document.getElementById('currentUserDisplay').style.display = 'block';
+      document.getElementById('currentUserDisplay').style.display = 'flex';
+      document.getElementById('currentUserAvatar').textContent = currentAvatar || '😀';
       document.getElementById('currentUserName').textContent = currentUser;
     }
 
@@ -935,12 +1036,14 @@
       content.innerHTML = `
         <h4 style="margin-bottom:15px;">👥 用户管理</h4>
         <div class="user-manage-list">
-          ${participants.map(p => `
-            <div class="user-manage-item">
-              <span>${escapeHtml(p)} ${p === adminUser ? '<span style="color:#ff6b35;font-size:12px;">(管理员)</span>' : ''}</span>
-              <button onclick="deleteParticipant('${escapeHtml(p)}')" style="background:#ff4444;color:white;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;">删除</button>
-            </div>
-          `).join('')}
+          ${participants.map(p => {
+            const name = typeof p === 'string' ? p : p.name;
+            const avatar = typeof p === 'string' ? '' : (p.avatar || '');
+            return `<div class="user-manage-item">
+              <span><span class="avatar-small">${avatar || '😀'}</span>${escapeHtml(name)} ${name === adminUser ? '<span style="color:#ff6b35;font-size:12px;">(管理员)</span>' : ''}</span>
+              <button onclick="deleteParticipant('${escapeHtml(name)}')" style="background:#ff4444;color:white;padding:6px 12px;border:none;border-radius:4px;cursor:pointer;">删除</button>
+            </div>`;
+          }).join('')}
         </div>
         <hr style="margin:20px 0;border:none;border-top:1px solid #eee;">
         <h4 style="margin-bottom:15px;">🔔 公告管理</h4>
@@ -991,12 +1094,14 @@
         return;
       }
 
-      memberList.innerHTML = participants.map(p => `
-        <label id="member-label-${escapeHtml(p)}">
-          <input type="checkbox" value="${escapeHtml(p)}" onchange="toggleMemberInGroups('${escapeHtml(p)}')">
-          ${escapeHtml(p)}
-        </label>
-      `).join('');
+      memberList.innerHTML = participants.map(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        const avatar = typeof p === 'string' ? '' : (p.avatar || '');
+        return `<label id="member-label-${escapeHtml(name)}">
+          <input type="checkbox" value="${escapeHtml(name)}" onchange="toggleMemberInGroups('${escapeHtml(name)}')">
+          <span class="avatar-small" style="width:20px;height:20px;font-size:14px;line-height:20px;">${avatar || '😀'}</span>${escapeHtml(name)}
+        </label>`;
+      }).join('');
     }
 
     // 添加分组
