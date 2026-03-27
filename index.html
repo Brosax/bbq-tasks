@@ -314,6 +314,224 @@
       transform: translateX(0);
     }
 
+    /* 公告栏样式 */
+    .notification-bar {
+      background: #fff;
+      padding: 15px 30px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .notification-input {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .notification-input input {
+      flex: 1;
+      padding: 10px 15px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    .notification-input input:focus {
+      border-color: #ff6b35;
+      outline: none;
+    }
+
+    .notification-input button {
+      padding: 10px 20px;
+      background: #ff6b35;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .notification-list {
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .notification-item {
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .notification-item .meta {
+      color: #888;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    /* 分组管理按钮 */
+    .manage-groups-btn {
+      margin-left: 15px;
+      padding: 4px 12px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.5);
+      color: white;
+      border-radius: 15px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .manage-groups-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .participant-with-delete {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 2px 5px;
+    }
+
+    .delete-participant-btn {
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      line-height: 1;
+    }
+
+    .is-admin .delete-participant-btn {
+      display: inline-block;
+    }
+
+    /* 模态框 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #888;
+    }
+
+    .group-list {
+      margin-bottom: 15px;
+    }
+
+    .group-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .group-item .members {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .group-item button {
+      padding: 5px 10px;
+      margin-left: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .group-edit-btn {
+      background: #4caf50;
+      color: white;
+    }
+
+    .group-delete-btn {
+      background: #ff4444;
+      color: white;
+    }
+
+    .add-group-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .add-group-form input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+
+    .add-group-form button {
+      padding: 8px 16px;
+      background: #ff6b35;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .member-select-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .member-select-list label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      background: #f0f0f0;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .member-select-list label.checked {
+      background: #ff6b35;
+      color: white;
+    }
+
     .notification.error {
       background: #ff4444;
     }
@@ -325,7 +543,17 @@
       <h1>🎉 烧烤任务分配</h1>
       <div class="participants">
         参与人员: <span id="participantsList">加载中...</span>
+        <button class="manage-groups-btn" onclick="openGroupModal()">管理分组</button>
       </div>
+    </div>
+
+    <!-- 公告栏 -->
+    <div class="notification-bar">
+      <div class="notification-input">
+        <input type="text" id="notificationInput" placeholder="发布公告...">
+        <button onclick="sendNotification()">发送</button>
+      </div>
+      <div id="notificationList"></div>
     </div>
 
     <div class="user-section">
@@ -371,13 +599,34 @@
     </div>
   </div>
 
+  <!-- 分组管理模态框 -->
+  <div class="modal-overlay" id="groupModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeGroupModal()">&times;</button>
+      <h3>管理分组</h3>
+
+      <div class="add-group-form">
+        <input type="text" id="newGroupName" placeholder="输入新分组名称">
+        <button onclick="addGroup()">添加</button>
+      </div>
+
+      <div class="group-list" id="groupList"></div>
+
+      <h4>分配成员到分组</h4>
+      <div class="member-select-list" id="memberSelectList"></div>
+    </div>
+  </div>
+
   <div class="notification" id="notification"></div>
 
   <script src="firebase-config.js"></script>
   <script>
     let currentUser = localStorage.getItem('bbq_user_name') || '';
     let participants = [];
+    let groups = {};
     let tasks = [];
+    let notifications = [];
+    let adminUser = ''; // 第一个加入的人是管理员
 
     // 初始化
     window.onload = function() {
@@ -399,14 +648,19 @@
         const data = snapshot.val();
         if (data) {
           participants = data.participants || [];
+          groups = data.groups || {};
           tasks = data.tasks || [];
+          notifications = data.notifications || [];
+          adminUser = data.adminUser || '';
           updateUI();
         } else {
           // 初始化数据
           activityRef.set({
             activityName: '周末烧烤聚会',
             participants: [],
-            tasks: []
+            groups: {},
+            tasks: [],
+            notifications: []
           });
         }
       });
@@ -414,13 +668,25 @@
 
     // 更新UI
     function updateUI() {
-      // 更新参与人员列表
+      // 更新参与人员列表（带删除按钮）
       const participantsEl = document.getElementById('participantsList');
+      const isAdmin = currentUser === adminUser;
       if (participants.length > 0) {
-        participantsEl.textContent = participants.join(' | ');
+        participantsEl.innerHTML = participants.map(p =>
+          `<span class="participant-with-delete ${currentUser === adminUser ? 'is-admin' : ''}">
+            ${escapeHtml(p)}
+            ${currentUser === adminUser ? `<button class="delete-participant-btn" onclick="deleteParticipant('${escapeHtml(p)}')" title="删除用户">&times;</button>` : ''}
+          </span>`
+        ).join(' | ');
       } else {
         participantsEl.textContent = '暂无';
       }
+
+      // 更新分组信息
+      updateGroupDisplay();
+
+      // 更新公告栏
+      updateNotificationBar();
 
       // 更新负责人多选框
       const checkboxGroup = document.getElementById('assigneeCheckboxGroup');
@@ -496,9 +762,18 @@
 
       // 更新Firebase中的参与人员
       if (!participants.includes(name)) {
-        const activityRef = db.ref('bbq_activity/participants');
+        const activityRef = db.ref('bbq_activity');
         const newParticipants = [...participants, name];
-        activityRef.set(newParticipants);
+
+        // 第一个加入的人成为管理员
+        const updates = {
+          participants: newParticipants
+        };
+        if (!adminUser) {
+          updates.adminUser = name;
+        }
+
+        activityRef.update(updates);
       }
 
       showCurrentUser();
@@ -578,6 +853,243 @@
       setTimeout(() => {
         notification.className = 'notification';
       }, 3000);
+    }
+
+    // ===== 分组管理功能 =====
+
+    // 打开分组管理模态框
+    function openGroupModal() {
+      document.getElementById('groupModal').classList.add('show');
+      renderGroupList();
+      renderMemberSelectList();
+    }
+
+    // 关闭分组管理模态框
+    function closeGroupModal() {
+      document.getElementById('groupModal').classList.remove('show');
+    }
+
+    // 渲染分组列表
+    function renderGroupList() {
+      const groupList = document.getElementById('groupList');
+      const groupNames = Object.keys(groups);
+
+      if (groupNames.length === 0) {
+        groupList.innerHTML = '<p style="color:#999;font-size:14px;">暂无分组</p>';
+        return;
+      }
+
+      groupList.innerHTML = groupNames.map(g => `
+        <div class="group-item">
+          <div>
+            <strong>${escapeHtml(g)}</strong>
+            <span class="members">(${groups[g].join(', ') || '暂无成员'})</span>
+          </div>
+          <div>
+            <button class="group-edit-btn" onclick="editGroupMembers('${escapeHtml(g)}')">编辑</button>
+            <button class="group-delete-btn" onclick="deleteGroup('${escapeHtml(g)}')">删除</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 渲染成员选择列表
+    function renderMemberSelectList() {
+      const memberList = document.getElementById('memberSelectList');
+
+      if (participants.length === 0) {
+        memberList.innerHTML = '<p style="color:#999;font-size:14px;">暂无成员可分配</p>';
+        return;
+      }
+
+      memberList.innerHTML = participants.map(p => `
+        <label id="member-label-${escapeHtml(p)}">
+          <input type="checkbox" value="${escapeHtml(p)}" onchange="toggleMemberInGroups('${escapeHtml(p)}')">
+          ${escapeHtml(p)}
+        </label>
+      `).join('');
+    }
+
+    // 添加分组
+    function addGroup() {
+      const name = document.getElementById('newGroupName').value.trim();
+      if (!name) {
+        showNotification('请输入分组名称', true);
+        return;
+      }
+      if (groups[name]) {
+        showNotification('分组已存在', true);
+        return;
+      }
+
+      groups[name] = [];
+      db.ref('bbq_activity/groups').set(groups);
+      document.getElementById('newGroupName').value = '';
+      renderGroupList();
+      showNotification('分组添加成功');
+    }
+
+    // 删除分组
+    function deleteGroup(groupName) {
+      if (!confirm(`确定要删除分组"${groupName}"吗？`)) return;
+
+      delete groups[groupName];
+      db.ref('bbq_activity/groups').set(groups);
+      renderGroupList();
+      showNotification('分组已删除');
+    }
+
+    // 编辑分组（成员分配）
+    function editGroupMembers(groupName) {
+      // 渲染带checkbox的成员列表
+      const memberList = document.getElementById('memberSelectList');
+      memberList.innerHTML = `<h5 style="margin:10px 0;">编辑分组: ${escapeHtml(groupName)}</h5>` +
+        participants.map(p => {
+          const isInGroup = groups[groupName] && groups[groupName].includes(p);
+          return `<label class="${isInGroup ? 'checked' : ''}">
+            <input type="checkbox" ${isInGroup ? 'checked' : ''}
+              onchange="updateGroupMember('${escapeHtml(groupName)}', '${escapeHtml(p)}', this.checked)">
+            ${escapeHtml(p)}
+          </label>`;
+        }).join('');
+    }
+
+    // 更新分组中的成员
+    function updateGroupMember(groupName, memberName, isChecked) {
+      if (!groups[groupName]) groups[groupName] = [];
+
+      if (isChecked) {
+        if (!groups[groupName].includes(memberName)) {
+          groups[groupName].push(memberName);
+        }
+      } else {
+        groups[groupName] = groups[groupName].filter(m => m !== memberName);
+      }
+
+      db.ref('bbq_activity/groups').set(groups);
+      renderGroupList();
+
+      // 更新标签样式
+      const label = document.getElementById(`member-label-${memberName}`);
+      if (label) {
+        const inAnyGroup = Object.values(groups).some(g => g.includes(memberName));
+        label.className = inAnyGroup ? 'checked' : '';
+      }
+    }
+
+    // 切换成员分组（在成员选择列表中）
+    function toggleMemberInGroups(memberName) {
+      // 简单实现：点击成员checkbox时，弹出选择分组
+      const memberGroups = [];
+      for (const g in groups) {
+        if (groups[g].includes(memberName)) memberGroups.push(g);
+      }
+
+      const newGroup = prompt(`成员"${memberName}"所属分组（多个用逗号分隔）:\n当前: ${memberGroups.join(', ')}\n可用: ${Object.keys(groups).join(', ')}`);
+      if (newGroup === null) return;
+
+      // 从所有分组中移除
+      for (const g in groups) {
+        groups[g] = groups[g].filter(m => m !== memberName);
+      }
+
+      // 添加到新分组
+      if (newGroup.trim()) {
+        newGroup.split(',').forEach(g => {
+          g = g.trim();
+          if (g && groups[g] && !groups[g].includes(memberName)) {
+            groups[g].push(memberName);
+          }
+        });
+      }
+
+      db.ref('bbq_activity/groups').set(groups);
+      renderGroupList();
+      renderMemberSelectList();
+    }
+
+    // 更新分组显示
+    function updateGroupDisplay() {
+      // 分组信息显示在参与者列表后面
+    }
+
+    // ===== 删除用户功能 =====
+
+    // 删除参与者
+    function deleteParticipant(name) {
+      if (!confirm(`确定要将"${name}"从活动中移除吗？`)) return;
+
+      // 从参与者列表中移除
+      const newParticipants = participants.filter(p => p !== name);
+      db.ref('bbq_activity/participants').set(newParticipants);
+
+      // 从所有分组中移除
+      for (const g in groups) {
+        groups[g] = groups[g].filter(m => m !== name);
+      }
+      db.ref('bbq_activity/groups').set(groups);
+
+      showNotification(`已移除用户: ${name}`);
+    }
+
+    // ===== 公告栏功能 =====
+
+    // 更新公告栏显示
+    function updateNotificationBar() {
+      const notificationList = document.getElementById('notificationList');
+
+      if (!notifications || notifications.length === 0) {
+        notificationList.innerHTML = '<p style="color:#999;font-size:13px;">暂无公告</p>';
+        return;
+      }
+
+      // 按时间倒序显示
+      const sortedNotifications = [...notifications].sort((a, b) => b.time - a.time);
+
+      notificationList.innerHTML = sortedNotifications.map(n => `
+        <div class="notification-item">
+          ${escapeHtml(n.message)}
+          <div class="meta">${escapeHtml(n.author)} · ${formatTime(n.time)}</div>
+        </div>
+      `).join('');
+    }
+
+    // 格式化时间
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60000) return '刚刚';
+      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+      return date.toLocaleDateString('zh-CN');
+    }
+
+    // 发送公告
+    function sendNotification() {
+      const message = document.getElementById('notificationInput').value.trim();
+      if (!message) {
+        showNotification('请输入公告内容', true);
+        return;
+      }
+      if (!currentUser) {
+        showNotification('请先加入活动', true);
+        return;
+      }
+
+      const newNotification = {
+        id: Date.now().toString(),
+        message: message,
+        author: currentUser,
+        time: Date.now()
+      };
+
+      const newNotifications = [...notifications, newNotification];
+      db.ref('bbq_activity/notifications').set(newNotifications);
+
+      document.getElementById('notificationInput').value = '';
+      showNotification('公告已发布');
     }
   </script>
 </body>
