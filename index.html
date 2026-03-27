@@ -901,21 +901,27 @@
       localStorage.setItem('bbq_user_avatar', currentAvatar);
 
       // 更新Firebase中的参与人员（存储头像信息）
-      if (!participants.includes(name)) {
-        const activityRef = db.ref('bbq_activity');
-        // 参与者现在存储对象 { name: 'xxx', avatar: '😀' }
-        const newParticipants = [...participants, { name: name, avatar: currentAvatar }];
+      const activityRef = db.ref('bbq_activity');
+
+      // 如果用户已存在，更新头像；如果不存在，添加新用户
+      let newParticipants;
+      const existingIndex = participants.findIndex(p => (typeof p === 'string' ? p : p.name) === name);
+
+      if (existingIndex >= 0) {
+        // 更新现有用户的头像
+        newParticipants = [...participants];
+        newParticipants[existingIndex] = { name: name, avatar: currentAvatar };
+      } else {
+        // 添加新用户
+        newParticipants = [...participants, { name: name, avatar: currentAvatar }];
 
         // 第一个加入的人成为管理员
-        const updates = {
-          participants: newParticipants
-        };
         if (!adminUser) {
-          updates.adminUser = name;
+          activityRef.update({ adminUser: name });
         }
-
-        activityRef.update(updates);
       }
+
+      activityRef.update({ participants: newParticipants });
 
       showCurrentUser();
       showNotification('加入成功！');
