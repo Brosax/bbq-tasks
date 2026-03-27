@@ -20,6 +20,127 @@
       padding: 20px;
     }
 
+    /* 登录页面样式 */
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 40px);
+    }
+
+    .login-container {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-container h1 {
+      text-align: center;
+      color: #ff6b35;
+      margin-bottom: 10px;
+    }
+
+    .login-subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+    }
+
+    .existing-users-section {
+      margin-bottom: 30px;
+    }
+
+    .existing-users-section h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .existing-users-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .existing-user-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      background: #f5f5f5;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .existing-user-item:hover {
+      background: #ffe0d0;
+      transform: scale(1.05);
+    }
+
+    .divider {
+      text-align: center;
+      color: #999;
+      margin: 20px 0;
+      position: relative;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background: #eee;
+    }
+
+    .divider::before {
+      left: 0;
+    }
+
+    .divider::after {
+      right: 0;
+    }
+
+    .new-user-section h3 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .login-container .user-input-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .login-container .user-input-group input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #ffcdb2;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .login-container .user-input-group input:focus {
+      border-color: #ff6b35;
+      outline: none;
+    }
+
+    .login-container .user-input-group button {
+      padding: 12px 24px;
+      background: #ff6b35;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
     .container {
       max-width: 600px;
       margin: 0 auto;
@@ -145,6 +266,20 @@
       background: #f5f5f5;
       text-align: center;
       line-height: 28px;
+    }
+
+    .current-user-bar {
+      display: flex;
+      align-items: center;
+      padding: 12px 30px;
+      background: #fff5f0;
+      border-bottom: 1px solid #ffe0d0;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .current-user-bar .avatar-small {
+      margin-right: 10px;
     }
 
     .add-task-section {
@@ -356,6 +491,23 @@
 
     .settings-btn:hover {
       background: #eee;
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #666;
+      margin-left: 10px;
+    }
+
+    .logout-btn:hover {
+      background: #ff4444;
+      color: white;
+      border-color: #ff4444;
     }
 
     .notification {
@@ -615,7 +767,37 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <!-- 登录页面 -->
+  <div class="login-page" id="loginPage">
+    <div class="login-container">
+      <h1>🎉 烧烤任务分配</h1>
+      <p class="login-subtitle">欢迎参加烧烤活动</p>
+
+      <div class="existing-users-section">
+        <h3>选择已有用户</h3>
+        <div class="existing-users-list" id="existingUsersList">
+          <p style="color:#999;font-size:14px;">暂无已有用户</p>
+        </div>
+      </div>
+
+      <div class="divider">或</div>
+
+      <div class="new-user-section">
+        <h3>创建新用户</h3>
+        <div class="avatar-select" id="loginAvatarSelectSection">
+          <p style="margin-bottom:10px;color:#666;">选择你的头像：</p>
+          <div class="avatar-options" id="loginAvatarOptions"></div>
+        </div>
+        <div class="user-input-group">
+          <input type="text" id="loginUserNameInput" placeholder="请输入你的名字">
+          <button onclick="doLogin()">加入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主页面 -->
+  <div class="container" id="mainPage" style="display:none;">
     <div class="header">
       <h1>🎉 烧烤任务分配</h1>
       <div class="participants">
@@ -633,19 +815,9 @@
       <div id="notificationList"></div>
     </div>
 
-    <div class="user-section">
-      <div class="avatar-select" id="avatarSelectSection">
-        <p style="margin-bottom:10px;color:#666;">选择你的头像：</p>
-        <div class="avatar-options" id="avatarOptions"></div>
-      </div>
-      <div class="user-input-group">
-        <input type="text" id="userNameInput" placeholder="请输入你的名字">
-        <button onclick="joinActivity()">加入</button>
-      </div>
-      <div class="current-user" id="currentUserDisplay" style="display: none;">
-        <span id="currentUserAvatar" class="avatar-small"></span>
-        <span id="currentUserName"></span>
-      </div>
+    <div class="current-user-bar">
+      <span id="currentUserAvatar" class="avatar-small"></span>
+      <span id="currentUserName"></span>
     </div>
 
     <div class="add-task-section">
@@ -678,7 +850,10 @@
 
     <div class="footer">
       <span>数据实时同步到云端 📱</span>
-      <button class="settings-btn" onclick="openSettingsModal()">⚙️ 设置</button>
+      <div>
+        <button class="settings-btn" onclick="openSettingsModal()">⚙️ 设置</button>
+        <button class="logout-btn" onclick="logout()">🚪 退出</button>
+      </div>
     </div>
   </div>
 
@@ -726,32 +901,114 @@
 
     // 初始化
     window.onload = function() {
-      // 渲染头像选择
-      renderAvatarOptions();
-
-      // 检查用户是否已登录
-      if (currentUser) {
-        document.getElementById('userNameInput').value = currentUser;
-        showCurrentUser();
-      }
+      // 渲染登录页头像选择
+      renderLoginAvatarOptions();
 
       // 监听Firebase数据变化
       initFirebaseListeners();
     };
 
-    // 渲染头像选项
-    function renderAvatarOptions() {
-      const container = document.getElementById('avatarOptions');
+    // 渲染登录页头像选项
+    function renderLoginAvatarOptions() {
+      const container = document.getElementById('loginAvatarOptions');
+      if (!container) return;
       container.innerHTML = avatarList.map(avatar => `
         <div class="avatar-option ${currentAvatar === avatar ? 'selected' : ''}"
-          onclick="selectAvatar('${avatar}')">${avatar}</div>
+          onclick="selectLoginAvatar('${avatar}')">${avatar}</div>
       `).join('');
     }
 
-    // 选择头像
-    function selectAvatar(avatar) {
+    // 选择登录头像
+    function selectLoginAvatar(avatar) {
       currentAvatar = avatar;
       localStorage.setItem('bbq_user_avatar', avatar);
+      renderLoginAvatarOptions();
+    }
+
+    // 渲染已有用户列表
+    function renderExistingUsers() {
+      const container = document.getElementById('existingUsersList');
+      if (!container || participants.length === 0) {
+        if (container) container.innerHTML = '<p style="color:#999;font-size:14px;">暂无已有用户</p>';
+        return;
+      }
+
+      container.innerHTML = participants.map(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        const avatar = typeof p === 'string' ? '' : (p.avatar || '');
+        return `<div class="existing-user-item" onclick="quickLogin('${escapeHtml(name)}', '${escapeHtml(avatar)}')">
+          <span class="avatar-small">${avatar || '😀'}</span>
+          ${escapeHtml(name)}
+        </div>`;
+      }).join('');
+    }
+
+    // 快速登录（选择已有用户）
+    function quickLogin(name, avatar) {
+      currentUser = name;
+      currentAvatar = avatar || '😀';
+      localStorage.setItem('bbq_user_name', name);
+      localStorage.setItem('bbq_user_avatar', currentAvatar);
+      showMainPage();
+    }
+
+    // 执行登录（新用户）
+    function doLogin() {
+      const name = document.getElementById('loginUserNameInput').value.trim();
+      if (!name) {
+        showNotification('请输入名字', true);
+        return;
+      }
+
+      if (!currentAvatar) {
+        showNotification('请先选择一个头像', true);
+        return;
+      }
+
+      currentUser = name;
+      localStorage.setItem('bbq_user_name', name);
+      localStorage.setItem('bbq_user_avatar', currentAvatar);
+
+      // 更新Firebase
+      const activityRef = db.ref('bbq_activity');
+      const existingIndex = participants.findIndex(p => (typeof p === 'string' ? p : p.name) === name);
+
+      let newParticipants;
+      if (existingIndex >= 0) {
+        newParticipants = [...participants];
+        newParticipants[existingIndex] = { name: name, avatar: currentAvatar };
+      } else {
+        newParticipants = [...participants, { name: name, avatar: currentAvatar }];
+        if (!adminUser) {
+          activityRef.update({ adminUser: name });
+        }
+      }
+
+      activityRef.update({ participants: newParticipants });
+      showMainPage();
+    }
+
+    // 显示主页面
+    function showMainPage() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainPage').style.display = 'block';
+      showCurrentUser();
+    }
+
+    // 显示登录页面
+    function showLoginPage() {
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('mainPage').style.display = 'none';
+    }
+
+    // 登出
+    function logout() {
+      localStorage.removeItem('bbq_user_name');
+      localStorage.removeItem('bbq_user_avatar');
+      currentUser = '';
+      currentAvatar = '';
+      showLoginPage();
+    }
       renderAvatarOptions();
     }
 
@@ -767,6 +1024,17 @@
           tasks = data.tasks || [];
           notifications = data.notifications || [];
           adminUser = data.adminUser || '';
+
+          // 检查是否已登录
+          if (currentUser) {
+            showMainPage();
+          } else {
+            showLoginPage();
+          }
+
+          // 渲染登录页已有用户列表
+          renderExistingUsers();
+
           updateUI();
         } else {
           // 初始化数据
@@ -777,6 +1045,7 @@
             tasks: [],
             notifications: []
           });
+          showLoginPage();
         }
       });
     }
@@ -929,7 +1198,6 @@
 
     // 显示当前用户
     function showCurrentUser() {
-      document.getElementById('currentUserDisplay').style.display = 'flex';
       document.getElementById('currentUserAvatar').textContent = currentAvatar || '😀';
       document.getElementById('currentUserName').textContent = currentUser;
     }
