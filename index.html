@@ -476,6 +476,42 @@
       margin-left: 10px;
     }
 
+    .subtask-list {
+      margin-top: 10px;
+      padding-left: 10px;
+      border-left: 2px solid #eee;
+    }
+
+    .subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 14px;
+    }
+
+    .subtask-item.completed span {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .subtask-add {
+      margin-top: 8px;
+    }
+
+    .subtask-add input {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .subtask-add input:focus {
+      outline: none;
+      border-color: #ff6b35;
+    }
+
     .delete-btn:hover {
       background: #cc3333;
     }
@@ -1201,6 +1237,27 @@
         : '';
       const creatorHtml = task.creator ? `<span class="creator">（${task.creator}创建）</span>` : '';
 
+      // 渲染子任务
+      const subtasks = task.subtasks || [];
+      const subtasksHtml = subtasks.length > 0
+        ? `<div class="subtask-list">
+            ${subtasks.map(st => `
+              <div class="subtask-item ${st.completed ? 'completed' : ''}">
+                <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${task.id}', '${st.id}')">
+                <span>${escapeHtml(st.title)}</span>
+                <button onclick="deleteSubtask('${task.id}', '${st.id}')" style="background:none;border:none;color:#ff4444;cursor:pointer;margin-left:auto;">×</button>
+              </div>
+            `).join('')}
+            <div class="subtask-add">
+              <input type="text" placeholder="添加子任务..." onkeydown="if(event.key==='Enter')addSubtask('${task.id}',this.value);this.value=''">
+            </div>
+          </div>`
+        : `<div class="subtask-list">
+            <div class="subtask-add">
+              <input type="text" placeholder="添加子任务... (回车添加)" onkeydown="if(event.key==='Enter')addSubtask('${task.id}',this.value);this.value=''">
+            </div>
+          </div>`;
+
       return `
         <div class="task-item ${task.completed ? 'completed' : ''}">
           <input type="checkbox" class="task-checkbox"
@@ -1209,10 +1266,40 @@
           <div class="task-content">
             <div class="task-title">${escapeHtml(task.title)}</div>
             <div class="task-meta">${assigneesHtml} ${creatorHtml}</div>
+            ${subtasksHtml}
           </div>
           <button class="delete-btn" onclick="deleteTask('${task.id}')">删除</button>
         </div>
       `;
+    }
+
+    // 添加子任务
+    function addSubtask(taskId, title) {
+      if (!title.trim()) return;
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      if (!task.subtasks) task.subtasks = [];
+      task.subtasks.push({ id: Date.now().toString(), title: title.trim(), completed: false });
+      db.ref('bbq_activity/tasks').set(tasks);
+    }
+
+    // 切换子任务完成状态
+    function toggleSubtask(taskId, subtaskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task || !task.subtasks) return;
+      const subtask = task.subtasks.find(st => st.id === subtaskId);
+      if (subtask) {
+        subtask.completed = !subtask.completed;
+        db.ref('bbq_activity/tasks').set(tasks);
+      }
+    }
+
+    // 删除子任务
+    function deleteSubtask(taskId, subtaskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task || !task.subtasks) return;
+      task.subtasks = task.subtasks.filter(st => st.id !== subtaskId);
+      db.ref('bbq_activity/tasks').set(tasks);
     }
 
     // 转义HTML
