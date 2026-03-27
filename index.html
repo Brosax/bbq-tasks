@@ -886,8 +886,6 @@
 
   <div class="notification" id="notification"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <script>
     // Firebase Configuration
     const firebaseConfig = {
@@ -907,10 +905,13 @@
     window.db = database;
   </script>
   <script>
+    console.log('Script loaded');
+
     // 可选头像列表
     const avatarList = ['😀', '😎', '🤓', '🥳', '😇', '🤗', '😸', '🐱', '🐶', '🦊', '🐼', '🐨', '🦁', '🐯', '🦄', '🌟', '🔥', '💪', '🎉', '🎈'];
 
     let currentUser = localStorage.getItem('bbq_user_name') || '';
+    let currentAvatar = localStorage.getItem('bbq_user_avatar') || '';
     let currentAvatar = localStorage.getItem('bbq_user_avatar') || '';
     let participants = [];
     let groups = {};
