@@ -1726,9 +1726,20 @@
       notificationList.innerHTML = sortedNotifications.map(n => `
         <div class="notification-item">
           ${escapeHtml(n.message)}
-          <div class="meta">${escapeHtml(n.author)} · ${formatTime(n.time)}</div>
+          <div class="meta">
+            ${escapeHtml(n.author)} · ${formatTime(n.time)}
+            ${n.author === currentUser ? `<button onclick="deleteNotification('${n.id}')" style="margin-left:10px;padding:2px 8px;background:#ff4444;color:white;border:none;border-radius:4px;font-size:11px;cursor:pointer;">删除</button>` : ''}
+          </div>
         </div>
       `).join('');
+    }
+
+    // 删除公告
+    function deleteNotification(id) {
+      if (!confirm('确定要删除这条公告吗？')) return;
+      const newNotifications = notifications.filter(n => n.id !== id);
+      db.ref('bbq_activity/notifications').set(newNotifications);
+      showNotification('公告已删除');
     }
 
     // 格式化时间
