@@ -1557,8 +1557,11 @@
     function deleteParticipant(name) {
       if (!confirm(`确定要将"${name}"从活动中移除吗？`)) return;
 
-      // 从参与者列表中移除
-      const newParticipants = participants.filter(p => p !== name);
+      // 从参与者列表中移除（处理对象数组格式）
+      const newParticipants = participants.filter(p => {
+        const pName = typeof p === 'string' ? p : p.name;
+        return pName !== name;
+      });
       db.ref('bbq_activity/participants').set(newParticipants);
 
       // 从所有分组中移除
@@ -1566,6 +1569,11 @@
         groups[g] = groups[g].filter(m => m !== name);
       }
       db.ref('bbq_activity/groups').set(groups);
+
+      // 如果删除的是当前用户，登出
+      if (name === currentUser) {
+        logout();
+      }
 
       showNotification(`已移除用户: ${name}`);
     }
