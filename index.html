@@ -1409,6 +1409,15 @@
 
     // 删除任务
     function deleteTask(taskId) {
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+
+      // 只有创建者可以删除自己的任务
+      if (task.creator !== currentUser) {
+        showNotification('只有创建者可以删除任务', true);
+        return;
+      }
+
       if (!confirm('确定要删除这个任务吗？')) {
         return;
       }
