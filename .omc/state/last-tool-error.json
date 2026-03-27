@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd \\\"C:\\\\Users\\\\xiangmin\\\\Desktop\\\\workspace\\\\BBQ-todolist\\\" && git stash && git revert 9d2bd75 --no-edit && git stash pop\",\"description\":\"暂存更改后回滚再恢复\"}",
+  "error": "Exit code 1\nwarning: in the working copy of '.omc/state/idle-notif-cooldown.json', LF will be replaced by CRLF the next time Git touches it\nwarning: in the working copy of 'index.html', LF will be replaced by CRLF the next time Git touches it\nSaved working directory and index state WIP on master: c9ccd18 feat: 添加在线用户显示功能\nAuto-merging .omc/state/idle-notif-cooldown.json\nCONFLICT (content): Merge conflict in .omc/state/idle-notif-cooldown.json\nAuto-merging index.html\nerror: could not revert 9d2bd7...",
+  "timestamp": "2026-03-27T11:52:46.314Z",
+  "retry_count": 2
+}

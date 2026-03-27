@@ -1,0 +1,17 @@
+{
+  "agents": [
+    {
+      "agent_id": "a5ef5e5c06f407575",
+      "agent_type": "superpowers:code-reviewer",
+      "started_at": "2026-03-27T11:54:28.070Z",
+      "parent_mode": "none",
+      "status": "completed",
+      "completed_at": "2026-03-27T11:54:46.302Z",
+      "duration_ms": 18232
+    }
+  ],
+  "total_spawned": 1,
+  "total_completed": 1,
+  "total_failed": 0,
+  "last_updated": "2026-03-27T11:54:46.413Z"
+}
