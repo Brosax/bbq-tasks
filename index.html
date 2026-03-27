@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>烧烤任务分配</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .participants {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .user-section {
+      padding: 20px 30px;
+      background: #fff5f0;
+      border-bottom: 1px solid #ffe0d0;
+    }
+
+    .user-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .user-input-group input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #ffcdb2;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .user-input-group input:focus {
+      border-color: #ff6b35;
+    }
+
+    .user-input-group button {
+      padding: 12px 24px;
+      background: #ff6b35;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .user-input-group button:hover {
+      background: #e55a2b;
+    }
+
+    .current-user {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .current-user span {
+      background: #ff6b35;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-left: 8px;
+    }
+
+    .add-task-section {
+      padding: 20px 30px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .add-task-section h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .task-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .task-form input,
+    .task-form select {
+      padding: 12px 16px;
+      border: 2px solid #eee;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .task-form input:focus,
+    .task-form select:focus {
+      border-color: #ff6b35;
+    }
+
+    .task-form button {
+      padding: 12px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .task-form button:hover {
+      background: #45a049;
+    }
+
+    .task-list {
+      padding: 20px 30px;
+    }
+
+    .task-section {
+      margin-bottom: 25px;
+    }
+
+    .task-section h3 {
+      color: #333;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eee;
+    }
+
+    .task-section h3.pending {
+      border-bottom-color: #ff6b35;
+    }
+
+    .task-section h3.completed {
+      border-bottom-color: #4caf50;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: all 0.3s;
+    }
+
+    .task-item:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .task-checkbox {
+      width: 24px;
+      height: 24px;
+      margin-right: 15px;
+      cursor: pointer;
+      accent-color: #4caf50;
+    }
+
+    .task-content {
+      flex: 1;
+    }
+
+    .task-title {
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .task-item.completed .task-title {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .task-meta {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .task-meta .assignee {
+      color: #ff6b35;
+      font-weight: 500;
+    }
+
+    .task-meta .creator {
+      color: #666;
+    }
+
+    .delete-btn {
+      padding: 8px 12px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+      margin-left: 10px;
+    }
+
+    .delete-btn:hover {
+      background: #cc3333;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: #888;
+      font-size: 13px;
+      background: #f9f9f9;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      background: #4caf50;
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transform: translateX(400px);
+      transition: transform 0.3s ease-out;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.error {
+      background: #ff4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎉 烧烤任务分配</h1>
+      <div class="participants">
+        参与人员: <span id="participantsList">加载中...</span>
+      </div>
+    </div>
+
+    <div class="user-section">
+      <div class="user-input-group">
+        <input type="text" id="userNameInput" placeholder="请输入你的名字">
+        <button onclick="joinActivity()">加入</button>
+      </div>
+      <div class="current-user" id="currentUserDisplay" style="display: none;">
+        当前用户: <span id="currentUserName"></span>
+      </div>
+    </div>
+
+    <div class="add-task-section">
+      <h3>➕ 添加任务</h3>
+      <div class="task-form">
+        <input type="text" id="taskTitleInput" placeholder="任务名称（必填）">
+        <select id="taskAssigneeSelect">
+          <option value="">选择负责人（可选）</option>
+        </select>
+        <button onclick="addTask()">添加任务</button>
+      </div>
+    </div>
+
+    <div class="task-list">
+      <div class="task-section">
+        <h3 class="pending">📋 待办任务 (<span id="pendingCount">0</span>)</h3>
+        <div id="pendingTasks">
+          <div class="empty-state">暂无待办任务</div>
+        </div>
+      </div>
+
+      <div class="task-section">
+        <h3 class="completed">✅ 已完成 (<span id="completedCount">0</span>)</h3>
+        <div id="completedTasks">
+          <div class="empty-state">暂无已完成任务</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      数据实时同步到云端 📱
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script src="firebase-config.js"></script>
+  <script>
+    let currentUser = localStorage.getItem('bbq_user_name') || '';
+    let participants = [];
+    let tasks = [];
+
+    // 初始化
+    window.onload = function() {
+      // 检查用户是否已登录
+      if (currentUser) {
+        document.getElementById('userNameInput').value = currentUser;
+        showCurrentUser();
+      }
+
+      // 监听Firebase数据变化
+      initFirebaseListeners();
+    };
+
+    // 初始化Firebase监听
+    function initFirebaseListeners() {
+      const activityRef = db.ref('bbq_activity');
+
+      activityRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          participants = data.participants || [];
+          tasks = data.tasks || [];
+          updateUI();
+        } else {
+          // 初始化数据
+          activityRef.set({
+            activityName: '周末烧烤聚会',
+            participants: [],
+            tasks: []
+          });
+        }
+      });
+    }
+
+    // 更新UI
+    function updateUI() {
+      // 更新参与人员列表
+      const participantsEl = document.getElementById('participantsList');
+      if (participants.length > 0) {
+        participantsEl.textContent = participants.join(' | ');
+      } else {
+        participantsEl.textContent = '暂无';
+      }
+
+      // 更新负责人下拉选项
+      const assigneeSelect = document.getElementById('taskAssigneeSelect');
+      assigneeSelect.innerHTML = '<option value="">选择负责人（可选）</option>';
+      participants.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p;
+        option.textContent = p;
+        assigneeSelect.appendChild(option);
+      });
+
+      // 渲染待办任务
+      const pendingTasks = tasks.filter(t => !t.completed);
+      const pendingContainer = document.getElementById('pendingTasks');
+      document.getElementById('pendingCount').textContent = pendingTasks.length;
+
+      if (pendingTasks.length > 0) {
+        pendingContainer.innerHTML = pendingTasks.map(task => renderTask(task)).join('');
+      } else {
+        pendingContainer.innerHTML = '<div class="empty-state">暂无待办任务</div>';
+      }
+
+      // 渲染已完成任务
+      const completedTasks = tasks.filter(t => t.completed);
+      const completedContainer = document.getElementById('completedTasks');
+      document.getElementById('completedCount').textContent = completedTasks.length;
+
+      if (completedTasks.length > 0) {
+        completedContainer.innerHTML = completedTasks.map(task => renderTask(task)).join('');
+      } else {
+        completedContainer.innerHTML = '<div class="empty-state">暂无已完成任务</div>';
+      }
+    }
+
+    // 渲染任务项
+    function renderTask(task) {
+      const assigneeHtml = task.assignee ? `<span class="assignee">👤 ${task.assignee}</span>` : '';
+      const creatorHtml = task.creator ? `<span class="creator">（${task.creator}创建）</span>` : '';
+
+      return `
+        <div class="task-item ${task.completed ? 'completed' : ''}">
+          <input type="checkbox" class="task-checkbox"
+            ${task.completed ? 'checked' : ''}
+            onchange="toggleTask('${task.id}')">
+          <div class="task-content">
+            <div class="task-title">${escapeHtml(task.title)}</div>
+            <div class="task-meta">${assigneeHtml} ${creatorHtml}</div>
+          </div>
+          <button class="delete-btn" onclick="deleteTask('${task.id}')">删除</button>
+        </div>
+      `;
+    }
+
+    // 转义HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // 加入活动
+    function joinActivity() {
+      const name = document.getElementById('userNameInput').value.trim();
+      if (!name) {
+        showNotification('请输入名字', true);
+        return;
+      }
+
+      currentUser = name;
+      localStorage.setItem('bbq_user_name', name);
+
+      // 更新Firebase中的参与人员
+      if (!participants.includes(name)) {
+        const activityRef = db.ref('bbq_activity/participants');
+        const newParticipants = [...participants, name];
+        activityRef.set(newParticipants);
+      }
+
+      showCurrentUser();
+      showNotification('加入成功！');
+    }
+
+    // 显示当前用户
+    function showCurrentUser() {
+      document.getElementById('currentUserDisplay').style.display = 'block';
+      document.getElementById('currentUserName').textContent = currentUser;
+    }
+
+    // 添加任务
+    function addTask() {
+      const title = document.getElementById('taskTitleInput').value.trim();
+      const assignee = document.getElementById('taskAssigneeSelect').value;
+
+      if (!title) {
+        showNotification('请输入任务名称', true);
+        return;
+      }
+
+      if (!currentUser) {
+        showNotification('请先输入名字加入活动', true);
+        return;
+      }
+
+      const task = {
+        id: Date.now().toString(),
+        title: title,
+        assignee: assignee,
+        creator: currentUser,
+        completed: false,
+        createdAt: Date.now()
+      };
+
+      const newTasks = [...tasks, task];
+      db.ref('bbq_activity/tasks').set(newTasks);
+
+      // 清空输入
+      document.getElementById('taskTitleInput').value = '';
+      document.getElementById('taskAssigneeSelect').value = '';
+
+      showNotification('任务添加成功！');
+    }
+
+    // 切换任务完成状态
+    function toggleTask(taskId) {
+      const newTasks = tasks.map(task => {
+        if (task.id === taskId) {
+          return { ...task, completed: !task.completed };
+        }
+        return task;
+      });
+      db.ref('bbq_activity/tasks').set(newTasks);
+    }
+
+    // 删除任务
+    function deleteTask(taskId) {
+      if (!confirm('确定要删除这个任务吗？')) {
+        return;
+      }
+      const newTasks = tasks.filter(task => task.id !== taskId);
+      db.ref('bbq_activity/tasks').set(newTasks);
+      showNotification('任务已删除');
+    }
+
+    // 显示通知
+    function showNotification(message, isError = false) {
+      const notification = document.getElementById('notification');
+      notification.textContent = message;
+      notification.className = 'notification show' + (isError ? ' error' : '');
+
+      setTimeout(() => {
+        notification.className = 'notification';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
