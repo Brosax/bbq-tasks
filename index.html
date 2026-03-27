@@ -384,6 +384,23 @@
       margin-bottom: 15px;
       padding-bottom: 10px;
       border-bottom: 2px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .filter-btn {
+      padding: 6px 12px;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 15px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #666;
+    }
+
+    .filter-btn:hover {
+      background: #eee;
     }
 
     .task-section h3.pending {
@@ -834,7 +851,11 @@
 
     <div class="task-list">
       <div class="task-section">
-        <h3 class="pending">📋 待办任务 (<span id="pendingCount">0</span>)</h3>
+        <h3 class="pending">📋 待办任务 (<span id="pendingCount">0</span>)
+          <button class="filter-btn" onclick="toggleTaskFilter()">
+            <span id="filterLabel">全部</span> ▼
+          </button>
+        </h3>
         <div id="pendingTasks">
           <div class="empty-state">暂无待办任务</div>
         </div>
@@ -919,6 +940,7 @@
     let tasks = [];
     let notifications = [];
     let adminUser = ''; // 第一个加入的人是管理员
+    let taskFilter = localStorage.getItem('bbq_task_filter') || 'all';
 
     // 初始化
     window.onload = function() {
@@ -1123,8 +1145,15 @@
         checkboxGroup.innerHTML = '<span style="color:#999;font-size:13px;">暂无人员，请先加入活动</span>';
       }
 
+      // 更新筛选按钮显示
+      document.getElementById('filterLabel').textContent = taskFilter === 'my' ? '我的' : '全部';
+
       // 渲染待办任务
-      const pendingTasks = tasks.filter(t => !t.completed);
+      let pendingTasks = tasks.filter(t => !t.completed);
+      // 筛选我的任务
+      if (taskFilter === 'my' && currentUser) {
+        pendingTasks = pendingTasks.filter(t => t.creator === currentUser || (t.assignees && t.assignees.includes(currentUser)));
+      }
       const pendingContainer = document.getElementById('pendingTasks');
       document.getElementById('pendingCount').textContent = pendingTasks.length;
 
@@ -1135,7 +1164,11 @@
       }
 
       // 渲染已完成任务
-      const completedTasks = tasks.filter(t => t.completed);
+      let completedTasks = tasks.filter(t => t.completed);
+      // 筛选我的任务
+      if (taskFilter === 'my' && currentUser) {
+        completedTasks = completedTasks.filter(t => t.creator === currentUser || (t.assignees && t.assignees.includes(currentUser)));
+      }
       const completedContainer = document.getElementById('completedTasks');
       document.getElementById('completedCount').textContent = completedTasks.length;
 
@@ -1144,6 +1177,13 @@
       } else {
         completedContainer.innerHTML = '<div class="empty-state">暂无已完成任务</div>';
       }
+    }
+
+    // 切换任务筛选
+    function toggleTaskFilter() {
+      taskFilter = taskFilter === 'all' ? 'my' : 'all';
+      localStorage.setItem('bbq_task_filter', taskFilter);
+      updateUI();
     }
 
     // 渲染任务项
