@@ -255,6 +255,13 @@
       background: #fff5f0;
     }
 
+    .avatar-edit-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
     .avatar-small {
       display: inline-block;
       width: 28px;
@@ -1473,7 +1480,18 @@
         return;
       }
 
+      // 找到当前用户的信息
+      const currentParticipant = participants.find(p => (typeof p === 'string' ? p : p.name) === currentUser);
+      const currentUserAvatar = currentParticipant ? (typeof currentParticipant === 'string' ? '' : (currentParticipant.avatar || '')) : currentAvatar;
+
       content.innerHTML = `
+        <h4 style="margin-bottom:15px;">🖼️ 修改头像</h4>
+        <div class="avatar-edit-grid" id="avatarEditGrid">
+          ${avatarList.map(a => `
+            <div class="avatar-option ${currentUserAvatar === a ? 'selected' : ''}" onclick="changeAvatar('${a}')" style="width:45px;height:45px;font-size:25px;">${a}</div>
+          `).join('')}
+        </div>
+        <hr style="margin:20px 0;border:none;border-top:1px solid #eee;">
         <h4 style="margin-bottom:15px;">👥 用户管理</h4>
         <div class="user-manage-list">
           ${participants.map(p => {
@@ -1489,6 +1507,23 @@
         <h4 style="margin-bottom:15px;">🔔 公告管理</h4>
         <button onclick="clearAllNotifications()" style="background:#ff4444;color:white;padding:8px 16px;border:none;border-radius:4px;cursor:pointer;">清空所有公告</button>
       `;
+    }
+
+    // 修改头像
+    function changeAvatar(newAvatar) {
+      const activityRef = db.ref('bbq_activity');
+      const newParticipants = participants.map(p => {
+        const name = typeof p === 'string' ? p : p.name;
+        if (name === currentUser) {
+          return { name: currentUser, avatar: newAvatar };
+        }
+        return p;
+      });
+      currentAvatar = newAvatar;
+      localStorage.setItem('bbq_user_avatar', newAvatar);
+      activityRef.update({ participants: newParticipants });
+      showNotification('头像已更新');
+      renderSettings();
     }
 
     // 清空所有公告
